@@ -1,0 +1,12 @@
+# dependencies
+node_modules/
+.venv/
+
+# production
+dist/
+
+# misc
+.DS_Store
+.vscode/
+.env
+.env.*

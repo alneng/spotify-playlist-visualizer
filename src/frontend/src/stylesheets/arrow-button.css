@@ -1,0 +1,48 @@
+div.animated-arrow {
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  position: absolute;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+div.animated-arrow::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  border-width: 2px 2px 0 0;
+  border-style: solid;
+  border-color: #000;
+  transition: 0.2s ease;
+  display: block;
+  transform-origin: 100% 0;
+}
+
+div.animated-arrow:after {
+  content: "";
+  float: left;
+  position: relative;
+  top: -100%;
+  width: 100%;
+  height: 0%;
+  transform: rotate(45deg);
+  border-width: 0 1px 0 0;
+  border-style: solid;
+  border-color: #000;
+  transform-origin: 100% 0;
+  transition: 0.2s ease;
+}
+
+.animated-arrow-btn:hover div.animated-arrow::before {
+  transform: scale(0.9);
+}
+
+.animated-arrow-btn:hover div.animated-arrow:after {
+  transform: rotate(45deg);
+  height: 120%;
+}
+
+.animated-arrow-btn:hover div.animated-arrow {
+  transform: translate(2px, -2px);
+}

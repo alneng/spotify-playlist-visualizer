@@ -1,0 +1,31 @@
+{
+  "name": "spotify-playlist-visualizer",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Visualizes your Spotify playlist as a 3d vector space",
+  "scripts": {
+    "i": "yarn install && yarn workspace backend install-py",
+    "i:win": "yarn install && yarn workspace backend install-py:win",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"Express,Flask,React\" -c \"bgBlue.bold,bgMagenta.bold,bgCyan.bold\" \"yarn backend:express\" \"yarn backend:flask\" \"yarn frontend\"",
+    "dev:win": "concurrently -k -p \"[{name}]\" -n \"Express,Flask,React\" -c \"bgBlue.bold,bgMagenta.bold,bgCyan.bold\" \"yarn backend:express\" \"yarn backend:flask:win\" \"yarn frontend\"",
+    "backend": "yarn workspace backend dev",
+    "backend:win": "yarn workspace backend dev:win",
+    "backend:express": "yarn workspace backend dev:express",
+    "backend:flask": "yarn workspace backend dev:flask",
+    "backend:flask:win": "yarn workspace backend dev:flask:win",
+    "frontend": "yarn workspace frontend dev",
+    "prisma:reset": "yarn workspace backend prisma:reset",
+    "prisma:migrate": "yarn workspace backend prisma:migrate",
+    "prisma:generate": "yarn workspace backend prisma:generate",
+    "prisma:studio": "yarn workspace backend prisma:studio",
+    "backend:deploy": "yarn workspace backend deploy",
+    "frontend:deploy": "yarn workspace frontend build && yarn workspace frontend preview"
+  },
+  "workspaces": [
+    "src/backend",
+    "src/frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

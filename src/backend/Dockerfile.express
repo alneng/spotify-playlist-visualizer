@@ -1,0 +1,45 @@
+# TO BE RUN FROM DOCKER COMPOSE. DO NOT RUN MANUALLY AS CONTEXT IS NOT SET CORRECTLY
+
+##################### BUILD #####################
+
+FROM node:18 AS build
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and install dependencies
+COPY package.json ./
+RUN yarn install
+
+# Copy the application code
+COPY . ./
+
+RUN yarn prisma:generate
+RUN yarn build
+
+##################### PROD #####################
+
+FROM node:18
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and install dependencies
+COPY package.json ./
+RUN yarn install --production
+
+# Copy the built Express app
+COPY --from=build /app/dist dist
+
+# Generate the prisma client
+COPY ./prisma ./
+RUN yarn prisma:generate
+
+# Set environment variables
+ENV NODE_ENV=production
+
+# Expose the Express port
+EXPOSE ${EXPRESS_PORT}
+
+# Run the Express application
+CMD ["yarn", "preview"]

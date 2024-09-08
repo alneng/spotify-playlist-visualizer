@@ -1,0 +1,44 @@
+{
+  "name": "backend",
+  "private": true,
+  "version": "0.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "install-py": "python3 -m venv .venv && source .venv/bin/activate && pip3 install -r requirements.txt",
+    "install-py:win": "python -m venv .venv && .venv/Scripts/activate && pip install -r requirements.txt",
+    "dev": "concurrently \"yarn dev:express\" \"yarn dev:flask\"",
+    "dev:win": "concurrently \"yarn dev:express\" \"yarn dev:flask:win\"",
+    "dev:express": "yarn nodemon src/express/index.ts",
+    "dev:flask": "source .venv/bin/activate && python3 src/flask/index.py",
+    "dev:flask:win": ".venv/scripts/activate && python src/flask/index.py",
+    "prisma:reset": "yarn prisma migrate reset",
+    "prisma:migrate": "yarn prisma migrate dev",
+    "prisma:migrate:prod": "yarn prisma migrate deploy",
+    "prisma:generate": "yarn prisma generate",
+    "prisma:studio": "yarn prisma studio",
+    "build": "tsc --noEmit false",
+    "preview": "node -r dotenv/config dist/index.js",
+    "prod:init-db": "docker exec -ti postgres psql -U postgres -c \"CREATE DATABASE spv;\"",
+    "deploy": "docker compose down && docker compose build && docker compose up -d"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "axios": "^1.6.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.19.2",
+    "express-validator": "^7.0.1",
+    "querystring": "^0.2.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.16",
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.4",
+    "prisma": "^5.18.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

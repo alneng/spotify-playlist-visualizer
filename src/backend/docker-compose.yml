@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  express:
+    container_name: express
+    env_file: ".env"
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.express
+    ports:
+      - "9988:9988"
+    depends_on:
+      - flask
+      - postgres
+
+  flask:
+    container_name: flask
+    environment:
+      - FLASK_PORT=9989
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.flask
+
+  postgres:
+    container_name: postgres
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: docker
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
