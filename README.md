@@ -7,6 +7,7 @@ Spotify Playlist Visualizer transforms your Spotify playlists into a dynamic 3D 
 ### App Requirements
 
 - Node.js 18.x
+- Python 3.x
 - Yarn - `npm i -g yarn`
 - Docker Engine (Docker Desktop, optional but useful)
 - A [Spotify web application](https://developer.spotify.com/dashboard) - client id and secret
@@ -20,7 +21,7 @@ Spotify Playlist Visualizer transforms your Spotify playlists into a dynamic 3D 
 
 #### Configuration for backend
 
-- Follow "Configuration Setup" in `src/backend/README.md`
+- Follow "Configuration Setup" in [`src/backend/README.md`](https://github.com/alneng/spotify-playlist-visualizer/blob/main/src/backend/README.md)
 
 #### Starting the application
 

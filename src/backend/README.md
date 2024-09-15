@@ -7,13 +7,14 @@ This is the README for the backend of spotify-playlist-visualizer. The backend i
 ### App Requirements (dev and prod)
 
 - Node.js 18.x
+- Python 3.x
 - Yarn - `npm i -g yarn`
 - Docker Engine (Docker Desktop, optional but useful)
 - A [Spotify web application](https://developer.spotify.com/dashboard) - client id and secret
 
 ### Local Development Database and API Setup (dev)
 
-#### Installing Dependencies in `src/backend` (not recommended, see README.md at root)
+#### Installing Dependencies in `src/backend` (not recommended, see [README.md](https://github.com/alneng/spotify-playlist-visualizer/blob/main/README.md) at root)
 
 1. Run `yarn install` for Express/DB dependencies
 2. For Flask dependencies, run:
@@ -22,7 +23,7 @@ This is the README for the backend of spotify-playlist-visualizer. The backend i
 
 #### Configuration Setup
 
-1. Create `src/backend/.env` <br>
+1. Create `.env` file at `src/backend/.env` <br>
    NOTE: where SPOTIFY_CLIENT_KEY - <base64 encoded `client_id:client_secret`>
 
 ```env
@@ -45,7 +46,7 @@ FLASK_PORT=9989
 or (below instructions apply to from `src/backend`)
 
 - Express app only: `yarn dev:express`
-- Flask app only: `dev:flask` (Unix/Mac) or `dev:flask:win` (Windows)
+- Flask app only: `yarn dev:flask` (Unix/Mac) or `yarn dev:flask:win` (Windows)
 
 Note that the Flask API does not support hot reloading, meaning when making changes to the Flask API, it must be restarted for changes to take effect.
 

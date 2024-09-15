@@ -11,7 +11,7 @@ This is the README for the frontend of spotify-playlist-visualizer. The frontend
 
 ### Local Development Setup (dev)
 
-#### Installing Dependencies in `src/frontend` (not recommended, see README.md at root)
+#### Installing Dependencies in `src/frontend` (not recommended, see [README.md](https://github.com/alneng/spotify-playlist-visualizer/blob/main/README.md) at root)
 
 1. Run `yarn install` for Vite/React app dependencies
 
