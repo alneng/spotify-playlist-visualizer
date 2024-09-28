@@ -16,9 +16,7 @@ app = Flask(__name__)
 @app.route('/api/generateVectors', methods=['POST'])
 def generate_vectors():
     # Load the dataset from the request body
-    csv = request.data.decode('utf-8')
-    request_data = StringIO(csv)
-    df_spotify = pd.read_csv(request_data)
+    df_spotify = pd.DataFrame(request.json)
 
     # Selecting relevant columns for PCA and song/artist names
     df_spotify_data = df_spotify.iloc[:, :11]

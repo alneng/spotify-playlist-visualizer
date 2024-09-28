@@ -3,7 +3,6 @@ import {
   fetchSpotifyPlaylistObject,
   fetchTracksAudioFeatures,
 } from "../utils/spotify.utils";
-import { convertToCSV } from "../utils/utils";
 import {
   mergeTrackInfoAndFeatures,
   PlaylistWithSongs,
@@ -28,7 +27,7 @@ export default class PlaylistService {
    * Gets the audio features of all tracks in a playlist.
    *
    * @param playlistId the playlistId of the playlist to get the features for
-   * @returns the features of all tracks in the given playlist, in a CSV formatted string
+   * @returns the features of all tracks in the given playlist, as a JSON string
    */
   public static async getPlaylistFeatures(playlistId: string): Promise<string> {
     const token = await fetchAccessToken();
@@ -66,7 +65,9 @@ export default class PlaylistService {
     // Combine all the audio features into one 1d array
     const allAudioFeatures: TrackFeatures[] = audioFeaturesChunks.flat();
 
-    return convertToCSV(mergeTrackInfoAndFeatures(trackMap, allAudioFeatures));
+    return JSON.stringify(
+      mergeTrackInfoAndFeatures(trackMap, allAudioFeatures)
+    );
   }
 
   /**
@@ -83,7 +84,7 @@ export default class PlaylistService {
       {
         method: "POST",
         headers: {
-          "Content-Type": "text/plain",
+          "Content-Type": "application/json",
         },
         body: playlistFeatures,
       }

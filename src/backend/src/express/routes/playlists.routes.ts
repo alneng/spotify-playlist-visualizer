@@ -1,7 +1,6 @@
 import express from "express";
 import { param } from "express-validator";
-import { validateInputs } from "../utils/utils";
-import { isValidPlaylistId } from "../utils/validation.utils";
+import { isValidPlaylistId, validateInputs } from "../utils/validation.utils";
 import PlaylistController from "../controllers/playlists.controllers";
 
 const router = express.Router();
