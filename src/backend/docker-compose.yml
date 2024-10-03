@@ -9,6 +9,7 @@ services:
       dockerfile: ./src/backend/Dockerfile.express
     ports:
       - "9988:9988"
+    restart: unless-stopped
     depends_on:
       - spv_flask
       - postgres
@@ -22,6 +23,7 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile.flask
+    restart: unless-stopped
 
   postgres:
     container_name: spv_postgres
@@ -33,6 +35,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    restart: unless-stopped
 
 volumes:
   postgres-data:
