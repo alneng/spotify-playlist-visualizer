@@ -18,8 +18,9 @@
     "prisma:studio": "yarn prisma studio",
     "build": "tsc --noEmit false",
     "preview": "node -r dotenv/config dist/index.js",
-    "prod:init-db": "docker exec -ti postgres psql -U postgres -c \"CREATE DATABASE spv;\"",
-    "deploy": "docker compose down && docker compose build && docker compose up -d"
+    "prod:init-backend": "docker compose down && docker compose build && docker compose up -d",
+    "prod:init-db": "docker exec -ti spv_postgres psql -U postgres -c \"CREATE DATABASE spv;\"",
+    "prod:deploy": "docker compose stop spv_express spv_flask && docker compose rm -f spv_express spv_flask && docker compose build spv_express spv_flask && docker compose up -d spv_express spv_flask"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",

@@ -1,20 +1,24 @@
 version: '3.8'
 
 services:
-  express:
-    container_name: express
+  spv_express:
+    container_name: spv_express
+    networks:
+      - spotify_playlist_visualizer
     env_file: ".env"
     build:
-      context: ./
-      dockerfile: ./Dockerfile.express
+      context: ../../
+      dockerfile: ./src/backend/Dockerfile.express
     ports:
       - "9988:9988"
     depends_on:
-      - flask
+      - spv_flask
       - postgres
 
-  flask:
-    container_name: flask
+  spv_flask:
+    container_name: spv_flask
+    networks:
+      - spotify_playlist_visualizer
     environment:
       - FLASK_PORT=9989
     build:
@@ -22,12 +26,19 @@ services:
       dockerfile: ./Dockerfile.flask
 
   postgres:
-    container_name: postgres
+    container_name: spv_postgres
+    networks:
+      - spotify_playlist_visualizer
     image: postgres
-    environment:
-      POSTGRES_PASSWORD: docker
+    env_file: ".env" # Includes the POSTGRES_PASSWORD
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
 volumes:
   postgres-data:
+
+networks:
+  spotify_playlist_visualizer:
+    driver: bridge
