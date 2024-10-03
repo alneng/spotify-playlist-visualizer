@@ -57,7 +57,8 @@ Note that the Flask API does not support hot reloading, meaning when making chan
 - `src/backend/.env`
 
 ```env
-DATABASE_URL="postgresql://postgres:docker@postgres:5432/spv?schema=public"
+DATABASE_URL="postgresql://postgres:your-password@postgres:5432/spv?schema=public"
+POSTGRES_PASSWORD="your-password"
 SPOTIFY_CLIENT_KEY="..."
 CORS_OPTIONS='{"origin":["https://your-domain.com"],"credentials":true,"methods":"GET,POST,OPTIONS"}'
 EXPRESS_PORT=9988
@@ -66,7 +67,11 @@ FLASK_PORT=9989
 
 #### Build and Deploy
 
+First Time Setup
 1. Edit configuration above to `.env`
-2. Run `yarn deploy` to build the API and start the containers (Express, Flask, Postgres)
-3. Run `yarn prod:init-db` (First time setup only)
-4. Run `yarn prisma:migrate:prod` to apply migrations to the database
+2. Run `yarn prod:init-backend` to build the API and start the containers (Express, Flask, Postgres)
+3. Run `yarn prod:init-db`
+
+Re-deploy existing application with new version
+1. Run `yarn prisma:migrate:prod` to apply migrations to the database (if running outside the docker network, change the DB url in .env)
+2. Run `yarn prod:deploy` to deploy new versions of the backend

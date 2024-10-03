@@ -19,7 +19,7 @@ import { SongObject } from "../types/SongObject";
 import { HttpException } from "../utils/errors.utils";
 
 const FLASK_HOST =
-  process.env.NODE_ENV === "production" ? "flask" : "127.0.0.1";
+  process.env.NODE_ENV === "production" ? "spv_flask" : "127.0.0.1";
 const FLASK_PORT = process.env.FLASK_PORT || 9989;
 
 export default class PlaylistService {

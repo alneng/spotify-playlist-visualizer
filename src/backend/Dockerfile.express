@@ -8,11 +8,14 @@ FROM node:18 AS build
 WORKDIR /app
 
 # Copy package.json and install dependencies
-COPY package.json ./
+COPY src/backend/package.json .
+COPY yarn.lock .
 RUN yarn install
 
 # Copy the application code
-COPY . ./
+COPY src/backend/src ./src
+COPY src/backend/prisma ./prisma
+COPY src/backend/tsconfig.json .
 
 RUN yarn prisma:generate
 RUN yarn build
@@ -25,14 +28,15 @@ FROM node:18
 WORKDIR /app
 
 # Copy package.json and install dependencies
-COPY package.json ./
+COPY src/backend/package.json .
+COPY yarn.lock .
 RUN yarn install --production
 
 # Copy the built Express app
 COPY --from=build /app/dist dist
 
 # Generate the prisma client
-COPY ./prisma ./
+COPY src/backend/prisma ./prisma
 RUN yarn prisma:generate
 
 # Set environment variables
