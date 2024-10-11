@@ -16,7 +16,11 @@ import {
 } from "../types/spotify-types";
 import { TrackInfo } from "../types/TrackInfo";
 import { SongObject } from "../types/SongObject";
-import { HttpException } from "../utils/errors.utils";
+import {
+  HttpException,
+  PlaylistFetchException,
+  PlaylistVectorGenerationException,
+} from "../utils/errors.utils";
 
 const FLASK_HOST =
   process.env.NODE_ENV === "production" ? "spv_flask" : "127.0.0.1";
@@ -28,6 +32,7 @@ export default class PlaylistService {
    *
    * @param playlistId the playlistId of the playlist to get the features for
    * @returns the features of all tracks in the given playlist, as a JSON string
+   * @throws PlaylistFetchException if the playlist cannot be fetched (e.g. playlist is private)
    */
   public static async getPlaylistFeatures(playlistId: string): Promise<string> {
     const token = await fetchAccessToken();
@@ -75,6 +80,8 @@ export default class PlaylistService {
    *
    * @param playlistId the playlistId of the playlist to get the songs info for
    * @returns the Songs for the playlist
+   * @throws PlaylistFetchException if the playlist cannot be fetched (e.g. playlist is private)
+   * @throws PlaylistVectorGenerationException if vectors cannot be generated for the playlist by the Flask API
    */
   public static async getPlaylistVectors(playlistId: string): Promise<Song[]> {
     const playlistFeatures: string = await this.getPlaylistFeatures(playlistId);
@@ -83,15 +90,13 @@ export default class PlaylistService {
       `http://${FLASK_HOST}:${FLASK_PORT}/api/generateVectors`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: playlistFeatures,
       }
     );
 
     if (!response.ok)
-      throw new HttpException(
+      throw new PlaylistVectorGenerationException(
         response.status,
         "There was an exception when generating vectors for the playlist"
       );
@@ -108,8 +113,13 @@ export default class PlaylistService {
         data: newSongsRecords,
       });
       return createdSongs;
-    } catch {
-      throw new HttpException(500, "Failed retrieving processed song data");
+    } catch (error: unknown) {
+      if (error instanceof PlaylistVectorGenerationException) throw error;
+
+      throw new HttpException(
+        500,
+        "Failed to create songs from processed song data"
+      );
     }
   }
 
@@ -118,6 +128,8 @@ export default class PlaylistService {
    *
    * @param playlistId the playlistId of the playlist to get the data for
    * @returns the data for the playlist
+   * @throws PlaylistFetchException if the playlist cannot be fetched (e.g. playlist is private)
+   * @throws PlaylistVectorGenerationException if vectors cannot be generated for the playlist by the Flask API
    */
   public static async getPlaylistData(
     playlistId: string
@@ -161,15 +173,35 @@ export default class PlaylistService {
           },
         });
 
-      // Generate new vectors and save them to the Playlist
-      await this.getPlaylistVectors(playlistId);
+      try {
+        // Generate new vectors and save them to the Playlist
+        await this.getPlaylistVectors(playlistId);
+      } catch (error: unknown) {
+        if (!playlist && error instanceof PlaylistVectorGenerationException) {
+          // Delete the new empty playlist to prevent it from being cached with nothing
+          await prisma.playlist.delete({ where: { playlistId } });
+        } else if (
+          playlist &&
+          error instanceof PlaylistVectorGenerationException
+        ) {
+          // Revert the snapshot id because the vectors were not updated
+          await prisma.playlist.update({
+            where: { playlistId },
+            data: { snapshotId: playlist.snapshotId },
+          });
+        }
+        throw error; // Pass the error to the next handler
+      }
 
       const updatedPlaylist = await prisma.playlist.findUniqueOrThrow({
         where: { playlistId },
         include: { songs: true },
       });
       return updatedPlaylist;
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof PlaylistFetchException) throw error;
+      if (error instanceof PlaylistVectorGenerationException) throw error;
+
       throw new HttpException(
         400,
         "Failed to generate the vectors for the songs"

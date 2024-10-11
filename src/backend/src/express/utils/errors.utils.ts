@@ -21,6 +21,10 @@ export class HttpException extends Error {
   }
 }
 
+export class PlaylistFetchException extends HttpException {}
+
+export class PlaylistVectorGenerationException extends HttpException {}
+
 /**
  * Error handling middleware. Takes the error and sends back the status of it and the message
  */
@@ -35,11 +39,7 @@ export const errorHandler: ErrorRequestHandler = (
   }
 
   if (error instanceof HttpException) {
-    let additionalErrorInfo = {};
-
-    res
-      .status(error.status)
-      .json({ ...additionalErrorInfo, message: error.message });
+    res.status(error.status).json({ message: error.message });
   } else {
     res.status(500).json({ message: JSON.stringify(error) });
     throw error;

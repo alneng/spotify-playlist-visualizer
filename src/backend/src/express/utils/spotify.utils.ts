@@ -6,7 +6,7 @@ import {
   PlaylistTrackObject,
   SeveralTrackFeaturesResponse,
 } from "../types/spotify-types";
-import { HttpException } from "./errors.utils";
+import { HttpException, PlaylistFetchException } from "./errors.utils";
 import prisma from "./prisma";
 
 /**
@@ -59,6 +59,7 @@ export async function fetchAccessToken(): Promise<string> {
  * @param playlistId the id of the playlist
  * @param tkn a Spotify access token
  * @returns the data of the Spotify playlist
+ * @throws PlaylistFetchException if the playlist cannot be fetched (e.g. playlist is private)
  */
 export async function fetchSpotifyPlaylistObject(
   playlistId: string,
@@ -85,7 +86,10 @@ export async function fetchSpotifyPlaylistObject(
     }
     return data;
   } catch {
-    throw new HttpException(400, "Failed to fetch playlist from Spotify");
+    throw new PlaylistFetchException(
+      400,
+      "Failed to fetch playlist from Spotify"
+    );
   }
 }
 
