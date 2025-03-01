@@ -1,6 +1,5 @@
 import axios from "axios";
-import querystring from "querystring";
-
+import qs from "qs";
 import {
   SpotifyPlaylistObject,
   PlaylistTrackObject,
@@ -29,7 +28,7 @@ export async function fetchAccessToken(): Promise<string> {
       Authorization: `Basic ${process.env.SPOTIFY_CLIENT_KEY}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    data: querystring.stringify(data),
+    data: qs.stringify(data),
     url: "https://accounts.spotify.com/api/token",
   };
 
