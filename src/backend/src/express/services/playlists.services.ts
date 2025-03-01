@@ -22,10 +22,7 @@ import {
   PlaylistVectorGenerationException,
 } from "../utils/errors.utils";
 import axios from "axios";
-
-const FLASK_HOST =
-  process.env.NODE_ENV === "production" ? "spv_flask" : "127.0.0.1";
-const FLASK_PORT = process.env.FLASK_PORT || 9989;
+import { FLASK_HOST, FLASK_PORT } from "../config";
 
 export default class PlaylistService {
   /**
