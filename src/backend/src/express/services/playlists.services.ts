@@ -21,6 +21,7 @@ import {
   PlaylistFetchException,
   PlaylistVectorGenerationException,
 } from "../utils/errors.utils";
+import axios from "axios";
 
 const FLASK_HOST =
   process.env.NODE_ENV === "production" ? "spv_flask" : "127.0.0.1";
@@ -86,23 +87,14 @@ export default class PlaylistService {
   public static async getPlaylistVectors(playlistId: string): Promise<Song[]> {
     const playlistFeatures: string = await this.getPlaylistFeatures(playlistId);
 
-    const response = await fetch(
-      `http://${FLASK_HOST}:${FLASK_PORT}/api/generateVectors`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: playlistFeatures,
-      }
-    );
-
-    if (!response.ok)
-      throw new PlaylistVectorGenerationException(
-        response.status,
-        "There was an exception when generating vectors for the playlist"
+    try {
+      const response = await axios.post<SongObject[]>(
+        `http://${FLASK_HOST}:${FLASK_PORT}/api/generateVectors`,
+        { playlistFeatures },
+        { headers: { "Content-Type": "application/json" } }
       );
 
-    try {
-      const songs = (await response.json()) as SongObject[];
+      const { data: songs } = response;
       const newSongsRecords = songs.map((s: SongObject) => {
         return { ...s, playlistId };
       });
@@ -113,13 +105,18 @@ export default class PlaylistService {
         data: newSongsRecords,
       });
       return createdSongs;
-    } catch (error: unknown) {
-      if (error instanceof PlaylistVectorGenerationException) throw error;
-
-      throw new HttpException(
-        500,
-        "Failed to create songs from processed song data"
-      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new PlaylistVectorGenerationException(
+          500,
+          "There was an exception when generating vectors for the playlist"
+        );
+      } else {
+        throw new HttpException(
+          500,
+          "Failed to create songs from processed song data"
+        );
+      }
     }
   }
 
