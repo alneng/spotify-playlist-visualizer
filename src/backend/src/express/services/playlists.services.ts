@@ -23,6 +23,9 @@ import {
 } from "../utils/errors.utils";
 import axios from "axios";
 import { FLASK_HOST, FLASK_PORT } from "../config";
+import { log } from "../utils/logger.utils";
+
+const file = "playlists.services.ts";
 
 export default class PlaylistService {
   /**
@@ -33,44 +36,57 @@ export default class PlaylistService {
    * @throws PlaylistFetchException if the playlist cannot be fetched (e.g. playlist is private)
    */
   public static async getPlaylistFeatures(playlistId: string): Promise<string> {
-    const token = await fetchAccessToken();
+    const logMeta = { file, method: PlaylistService.getPlaylistFeatures.name };
+    log.debug(`Fetching playlist features for playlist ${playlistId}`, logMeta);
 
-    const playlist = await fetchSpotifyPlaylistObject(playlistId, token);
+    try {
+      const token = await fetchAccessToken();
+      const playlist = await fetchSpotifyPlaylistObject(playlistId, token);
+      const trackInfos = trackInfosFromPlaylistObject(playlist);
+      // Create a map for each Track in the playlist
+      const trackMap: Map<string, TrackInfo> = new Map();
+      trackInfos.forEach((trackInfo: TrackInfo) =>
+        trackMap.set(trackInfo.id, trackInfo)
+      );
 
-    const trackInfos = trackInfosFromPlaylistObject(playlist);
-    // Create a map for each Track in the playlist
-    const trackMap: Map<string, TrackInfo> = new Map();
-    trackInfos.forEach((trackInfo: TrackInfo) =>
-      trackMap.set(trackInfo.id, trackInfo)
-    );
+      // Split the tracks into chunks of 100 to be processed
+      const chunkSize = 100;
+      const chunks: TrackInfo[][] = [];
+      for (let i = 0; i < trackInfos.length; i += chunkSize) {
+        const chunk = trackInfos.slice(i, i + chunkSize);
+        chunks.push(chunk);
+      }
 
-    // Split the tracks into chunks of 100 to be processed
-    const chunkSize = 100;
-    const chunks: TrackInfo[][] = [];
-    for (let i = 0; i < trackInfos.length; i += chunkSize) {
-      const chunk = trackInfos.slice(i, i + chunkSize);
-      chunks.push(chunk);
+      // Get audio features of all of the tracks in each chunk
+      const results = chunks.map((chunk) =>
+        fetchTracksAudioFeatures(
+          chunk.map((trackInfo) => trackInfo.id),
+          token
+        )
+      );
+      const featuresChunks: SeveralTrackFeaturesResponse[] = await Promise.all(
+        results
+      );
+      const audioFeaturesChunks: TrackFeatures[][] = featuresChunks.map(
+        (fc) => fc.audio_features
+      );
+      // Combine all the audio features into one 1d array
+      const allAudioFeatures: TrackFeatures[] = audioFeaturesChunks.flat();
+
+      log.debug(
+        `Fetched ${allAudioFeatures.length} audio features for playlist ${playlistId}`,
+        logMeta
+      );
+      return JSON.stringify(
+        mergeTrackInfoAndFeatures(trackMap, allAudioFeatures)
+      );
+    } catch (error) {
+      log.debug(
+        `Failed to fetch playlist features for playlist ${playlistId}`,
+        { ...logMeta, error }
+      );
+      throw error;
     }
-
-    // Get audio features of all of the tracks in each chunk
-    const results = chunks.map((chunk) =>
-      fetchTracksAudioFeatures(
-        chunk.map((trackInfo) => trackInfo.id),
-        token
-      )
-    );
-    const featuresChunks: SeveralTrackFeaturesResponse[] = await Promise.all(
-      results
-    );
-    const audioFeaturesChunks: TrackFeatures[][] = featuresChunks.map(
-      (fc) => fc.audio_features
-    );
-    // Combine all the audio features into one 1d array
-    const allAudioFeatures: TrackFeatures[] = audioFeaturesChunks.flat();
-
-    return JSON.stringify(
-      mergeTrackInfoAndFeatures(trackMap, allAudioFeatures)
-    );
   }
 
   /**
@@ -82,9 +98,16 @@ export default class PlaylistService {
    * @throws PlaylistVectorGenerationException if vectors cannot be generated for the playlist by the Flask API
    */
   public static async getPlaylistVectors(playlistId: string): Promise<Song[]> {
+    const logMeta = { file, method: PlaylistService.getPlaylistVectors.name };
+    log.debug(`Generating vectors for playlist ${playlistId}`, logMeta);
+
     const playlistFeatures: string = await this.getPlaylistFeatures(playlistId);
 
     try {
+      log.debug(`Sending playlist features to Flask API`, {
+        ...logMeta,
+        playlistFeatures,
+      });
       const response = await axios.post<SongObject[]>(
         `http://${FLASK_HOST}:${FLASK_PORT}/api/generateVectors`,
         { playlistFeatures },
@@ -103,6 +126,11 @@ export default class PlaylistService {
       });
       return createdSongs;
     } catch (error) {
+      log.debug(`Failed to generate vectors for playlist ${playlistId}`, {
+        ...logMeta,
+        playlistFeatures,
+        error,
+      });
       if (axios.isAxiosError(error)) {
         throw new PlaylistVectorGenerationException(
           500,
@@ -128,6 +156,9 @@ export default class PlaylistService {
   public static async getPlaylistData(
     playlistId: string
   ): Promise<PlaylistWithSongs> {
+    const logMeta = { file, method: PlaylistService.getPlaylistData.name };
+    log.debug(`Fetching playlist data for playlist ${playlistId}`, logMeta);
+
     const spotifyPlaylist = await fetchSpotifyPlaylistObject(playlistId);
 
     if (spotifyPlaylist.id !== playlistId)

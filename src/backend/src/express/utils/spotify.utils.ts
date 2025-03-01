@@ -8,6 +8,9 @@ import {
 import { HttpException, PlaylistFetchException } from "./errors.utils";
 import prisma from "./prisma";
 import { SPOTIFY_CLIENT_KEY } from "../config";
+import { log } from "./logger.utils";
+
+const file = "spotify.utils.ts";
 
 /**
  * Produces a Spotify access token.
@@ -15,6 +18,8 @@ import { SPOTIFY_CLIENT_KEY } from "../config";
  * @returns a Spotify access token
  */
 export async function fetchAccessToken(): Promise<string> {
+  const logMeta = { file, method: fetchAccessToken.name };
+
   const token = await prisma.access_Token.findFirst({
     where: { expiresAt: { gt: new Date() } },
   });
@@ -47,8 +52,10 @@ export async function fetchAccessToken(): Promise<string> {
       },
     });
 
+    log.debug("Successfully fetched new Spotify access token", logMeta);
     return createToken.value;
-  } catch {
+  } catch (error) {
+    log.debug("Failed to fetch Spotify access token", { ...logMeta, error });
     throw new HttpException(500, "Server failed to fetch from Spotify");
   }
 }
@@ -65,6 +72,12 @@ export async function fetchSpotifyPlaylistObject(
   playlistId: string,
   tkn?: string
 ): Promise<SpotifyPlaylistObject> {
+  const logMeta = { file, method: fetchSpotifyPlaylistObject.name };
+  log.debug(
+    `Fetching Spotify playlist object for playlist ${playlistId}`,
+    logMeta
+  );
+
   const token = tkn ?? (await fetchAccessToken());
 
   try {
@@ -84,8 +97,17 @@ export async function fetchSpotifyPlaylistObject(
         await fetchTracks(data.tracks.next, token)
       );
     }
+
+    log.debug(
+      `Successfully fetched Spotify playlist object for playlist ${playlistId}`,
+      logMeta
+    );
     return data;
-  } catch {
+  } catch (error) {
+    log.debug(
+      `Failed to fetch Spotify playlist object for playlist ${playlistId}`,
+      { ...logMeta, error }
+    );
     throw new PlaylistFetchException(
       400,
       "Failed to fetch playlist from Spotify"
@@ -134,14 +156,29 @@ export async function fetchTracksAudioFeatures(
   trackIds: string[],
   token: string
 ): Promise<SeveralTrackFeaturesResponse> {
-  const response = await axios({
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    url: `https://api.spotify.com/v1/audio-features?ids=${trackIds.join(",")}`,
+  const logMeta = { file, method: fetchSpotifyPlaylistObject.name };
+  log.debug(`Fetching audio features for ${trackIds.length} tracks`, {
+    ...logMeta,
+    trackIds,
   });
 
-  return response.data;
+  try {
+    const response = await axios({
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      url: `https://api.spotify.com/v1/audio-features?ids=${trackIds.join(
+        ","
+      )}`,
+    });
+    return response.data;
+  } catch (error) {
+    log.debug(`Failed to fetch audio features for ${trackIds.length} tracks`, {
+      ...logMeta,
+      error,
+    });
+    throw new HttpException(400, "Failed to fetch audio features from Spotify");
+  }
 }
