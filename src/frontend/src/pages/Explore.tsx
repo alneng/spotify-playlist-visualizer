@@ -2,46 +2,21 @@ import React, { useState } from "react";
 import PlaylistVisualizer from "../components/PlaylistVisualizer";
 import StatusMessage from "../components/StatusMessage";
 import Spinner from "../components/Spinner";
-import PlaylistData from "../types/PlaylistData";
 import ButtonWithArrow from "../components/ButtonWithArrow";
 import BackgroundGradient from "../components/BackgroundGradient";
-
-const API_URL: string =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:9988";
+import { useFetchPlaylistData } from "../hooks/playlist.hooks";
 
 const Explore: React.FC = () => {
+  const { mutateAsync, data, isPending, error } = useFetchPlaylistData();
+
   const [urlInput, setUrlInput] = useState("");
   const [playlistId, setPlaylistId] = useState("");
-  const [playlistData, setPlaylistData] = useState<PlaylistData>();
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handlePlaylistQuery = async () => {
-    try {
-      setError("");
-      const parsedInput = urlInput.split("/")[4].split("?")[0];
-
-      if (parsedInput.length === 22 && parsedInput !== playlistId) {
-        setIsLoading(true);
-        setPlaylistId(parsedInput);
-
-        const response = await fetch(
-          `${API_URL}/api/playlists/${parsedInput}/data`,
-          { method: "GET" }
-        );
-
-        if (!response.ok)
-          setError("Failed to fetch Spotify URL. Is the playlist public?");
-        else {
-          const data = (await response.json()) as PlaylistData;
-          setPlaylistData(data);
-        }
-
-        setIsLoading(false);
-      }
-    } catch {
-      setError("Failed to parse Spotify URL");
+    const parsedPlaylistId = urlInput.split("/")[4].split("?")[0];
+    if (parsedPlaylistId.length === 22 && parsedPlaylistId !== playlistId) {
+      setPlaylistId(parsedPlaylistId);
+      await mutateAsync(parsedPlaylistId);
     }
   };
 
@@ -68,23 +43,23 @@ const Explore: React.FC = () => {
       </div>
 
       <div className="h-full">
-        {error !== "" ? (
+        {error && error.response ? (
           <StatusMessage className="bg-black">
             <div className="text-xl">
               <p className="inline">Encountered the following error: </p>
-              <p className="inline font-bold">{error}</p>
+              <p className="inline font-bold">{error.response.data.message}</p>
             </div>
           </StatusMessage>
-        ) : isLoading ? (
+        ) : isPending ? (
           <>
-            <BackgroundGradient transition={isLoading} />
+            <BackgroundGradient transition={isPending} />
             <StatusMessage className="bg-black">
               <div className="z-10 text-xl">Fetching Playlist...</div>
               <Spinner className="ml-2" />
             </StatusMessage>
           </>
-        ) : playlistData ? (
-          <PlaylistVisualizer data={playlistData} />
+        ) : data ? (
+          <PlaylistVisualizer data={data} />
         ) : (
           <>
             <BackgroundGradient />
