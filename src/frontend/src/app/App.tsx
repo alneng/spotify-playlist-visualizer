@@ -7,7 +7,13 @@ import NotFound from "../pages/NotFound";
 import About from "../pages/About";
 
 const App: React.FC = () => {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+      },
+    },
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
