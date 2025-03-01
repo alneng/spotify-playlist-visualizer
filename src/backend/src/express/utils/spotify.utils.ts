@@ -1,6 +1,5 @@
 import axios from "axios";
-import querystring from "querystring";
-
+import qs from "qs";
 import {
   SpotifyPlaylistObject,
   PlaylistTrackObject,
@@ -8,6 +7,7 @@ import {
 } from "../types/spotify-types";
 import { HttpException, PlaylistFetchException } from "./errors.utils";
 import prisma from "./prisma";
+import { SPOTIFY_CLIENT_KEY } from "../config";
 
 /**
  * Produces a Spotify access token.
@@ -26,10 +26,10 @@ export async function fetchAccessToken(): Promise<string> {
   const options = {
     method: "POST",
     headers: {
-      Authorization: `Basic ${process.env.SPOTIFY_CLIENT_KEY}`,
+      Authorization: `Basic ${SPOTIFY_CLIENT_KEY}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    data: querystring.stringify(data),
+    data: qs.stringify(data),
     url: "https://accounts.spotify.com/api/token",
   };
 
