@@ -4,6 +4,7 @@ import cors from "cors";
 import apiRouter from "./api";
 import { errorHandler } from "./utils/errors.utils";
 import { CORS_OPTIONS, EXPRESS_PORT } from "./config";
+import { log } from "./utils/logger.utils";
 
 const app = express();
 
@@ -18,5 +19,5 @@ app.use("/api", apiRouter);
 app.use(errorHandler);
 
 app.listen(EXPRESS_PORT, "0.0.0.0", () => {
-  console.log(`Express API running at http://localhost:${EXPRESS_PORT}`);
+  log.info(`Express API running at http://localhost:${EXPRESS_PORT}`);
 });

@@ -15,3 +15,9 @@ export const CORS_OPTIONS =
   });
 
 export const SPOTIFY_CLIENT_KEY = process.env.SPOTIFY_CLIENT_KEY;
+
+export const loggerConfig = {
+  enableHttpLogPrinting: false, // Whether to print HTTP logs to console
+  logLevel: "info" as const, // Default log level
+  enableDebug: true, // Whether to enable debug logs
+};
