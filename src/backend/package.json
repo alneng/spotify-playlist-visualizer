@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
-    "axios": "^1.6.7",
+    "axios": "^1.13.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "express": "^4.20.0",
